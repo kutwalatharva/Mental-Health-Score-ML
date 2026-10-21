@@ -6,7 +6,8 @@
   const form = document.getElementById("predict-form");
   const submitBtn = document.getElementById("submit-btn");
   const resetBtn = document.getElementById("reset-btn");
-  
+  const errorRetryBtn = document.getElementById("error-retry-btn");
+
   const stateIdle = document.getElementById("state-idle");
   const stateLoading = document.getElementById("state-loading");
   const stateResult = document.getElementById("state-result");
@@ -16,7 +17,9 @@
   const scoreBandEl = document.getElementById("score-band");
   const scoreContextEl = document.getElementById("score-context");
   const gaugeFill = document.getElementById("gauge-fill");
-  
+  const errorLabelEl = document.getElementById("error-label");
+  const errorCopyEl = document.getElementById("error-copy");
+
   const GAUGE_ARC_LENGTH = 314; // approx pi * r(100)
 
   // ---------------------------------------------------------
@@ -148,21 +151,11 @@
   // ---------------------------------------------------------
   // UI state switching
   // ---------------------------------------------------------
-function showState(name) {
-  const states = {
-    idle: stateIdle,
-    loading: stateLoading,
-    result: stateResult
-  };
-
-  Object.values(states).forEach((el) => {
-    el.hidden = true;
-  });
-
-  if (states[name]) {
-    states[name].hidden = false;
+  function showState(name) {
+    [stateIdle, stateLoading, stateResult, stateError].forEach((el) => (el.hidden = true));
+    ({ idle: stateIdle, loading: stateLoading, result: stateResult, error: stateError }[name]).hidden = false;
   }
-}
+
   function setSubmitting(isSubmitting) {
     submitBtn.disabled = isSubmitting;
     submitBtn.classList.toggle("loading", isSubmitting);
@@ -207,10 +200,11 @@ function showState(name) {
     showState("result");
   }
 
-function renderError(label, copy) {
-  showState("idle");
-  alert(`${label}\n\n${copy}`);
-}
+  function renderError(label, copy) {
+    errorLabelEl.textContent = label;
+    errorCopyEl.textContent = copy;
+    showState("error");
+  }
 
   // ---------------------------------------------------------
   // Parse FastAPI / Pydantic 422 error responses into
@@ -304,5 +298,8 @@ function renderError(label, copy) {
     showState("idle");
   });
 
-
+  errorRetryBtn.addEventListener("click", () => {
+    showState("idle");
+  });
 })();
+
